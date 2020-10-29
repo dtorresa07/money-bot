@@ -2,7 +2,7 @@
 
 namespace App\Conversations;
 
-use App\Http\Controllers\UserController;
+use App\Repositories\UserRepository;
 use BotMan\BotMan\Messages\Incoming\Answer;
 use BotMan\BotMan\Messages\Conversations\Conversation;
 
@@ -12,6 +12,12 @@ class RegisterConversation extends Conversation
     protected $email;
     protected $password;
     protected $password_confirmation;
+    protected $userRepo;
+
+    public function __construct(UserRepository $userRepo)
+    {
+        $this->userRepo = $userRepo;
+    }
 
     public function askName()
     {
@@ -63,10 +69,10 @@ class RegisterConversation extends Conversation
                         "password" => $this->password
                     ];
 
-                    $new_user = new UserController;
-                    $data = $new_user->register($params);
 
-                    $this->say('Great - that is all we need, ' . $this->name . '|' . json_encode($params));
+                    $response = $this->userRepo->register($params);
+
+                    $this->say('Great - that is all we need, ' . $this->name);
                     $this->say('You are logged now');
 
 

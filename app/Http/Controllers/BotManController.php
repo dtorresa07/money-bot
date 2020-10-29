@@ -2,12 +2,23 @@
 namespace App\Http\Controllers;
 
 use BotMan\BotMan\BotMan;
+use App\Services\CurrencyAPIService;
+use Illuminate\Support\Facades\Auth;
 use App\Conversations\LoginConversation;
 use App\Conversations\RegisterConversation;
-use BotMan\BotMan\Messages\Incoming\Answer;
 
 class BotManController extends Controller
 {
+    protected $registerConversation;
+    protected $loginConversation;
+
+    public function __construct(
+        RegisterConversation $registerConversation,
+        LoginConversation $loginConversation
+    ) {
+        $this->registerConversation = $registerConversation;
+        $this->loginConversation = $loginConversation;
+    }
     /**
      * Place your BotMan logic here.
      */
@@ -18,10 +29,16 @@ class BotManController extends Controller
         $botman->hears('{message}', function ($botman, $message) {
             switch (strtolower(trim($message))) {
                 case 'register':
-                    $botman->startConversation(new RegisterConversation);
+                    $botman->startConversation($this->registerConversation);
                     break;
                 case 'login':
-                    $botman->startConversation(new LoginConversation);
+                    $botman->startConversation($this->loginConversation);
+                    break;
+                case 'list currencies':
+                    $this->listCurrencies($botman);
+                    break;
+                case 'user':
+                    $this->showUser($botman);
                     break;
                 default:
                     $botman->reply("write 'hi' for testing...");
@@ -31,15 +48,35 @@ class BotManController extends Controller
         $botman->listen();
     }
 
-    /**
-     * Place your BotMan logic here.
-     */
-    public function askName($botman)
+    public function listCurrencies($botman)
     {
-        $botman->ask('Hello! What is your Name?', function (Answer $answer) {
-            $name = $answer->getText();
+        try {
+            $currencyAPIService = new CurrencyAPIService();
+            $message = "All currencies<br />";
+            $currencyList = [];
+            foreach ($currencyAPIService->getCurrencyList() as $currency) {
+                $currencyList[] = '<b>' . $currency['currency'] . '</b> - ' . $currency['description'];
+            }
 
-            $this->say('Nice to meet you '.$name);
-        });
+            $message .= implode("<br />", $currencyList);
+
+            $botman->reply($message);
+        } catch (Exception $e) {
+            if ($e->getCode() == 400) {
+                $botman->reply("So, it seems we have an error " . $e->getMessage());
+            } else {
+                $botman->reply("Something failed, please try again...");
+            }
+        }
+    }
+
+    public function showUser($botman)
+    {
+        $user = Auth::user();
+        if (Auth::check()) {
+            $botman->reply("Autenticado" . $user->name);
+        } else {
+            $botman->reply("No autenticado");
+        }
     }
 }

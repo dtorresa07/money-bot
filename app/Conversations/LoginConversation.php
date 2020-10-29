@@ -2,7 +2,7 @@
 
 namespace App\Conversations;
 
-use App\Http\Controllers\UserController;
+use App\Repositories\UserRepository;
 use BotMan\BotMan\Messages\Incoming\Answer;
 use BotMan\BotMan\Messages\Conversations\Conversation;
 
@@ -11,7 +11,12 @@ class LoginConversation extends Conversation
     protected $email;
     protected $password;
 
-    protected $userController;
+    protected $userRepo;
+
+    public function __construct(UserRepository $userRepo)
+    {
+        $this->userRepo = $userRepo;
+    }
     /**
      * First question
      */
@@ -29,9 +34,8 @@ class LoginConversation extends Conversation
         $this->ask('Now, please give me your password', function (Answer $answer) {
             $this->password = $answer->getText();
 
-            $this->userController = new UserController;
 
-            if ($data = $this->userController->login($this->email, $this->password)) {
+            if ($data = $this->userRepo->login($this->email, $this->password)) {
                 $this->say('Welcome ' . $data['name'] . '|' . json_encode($data));
             } else {
                 $this->say('Hmm, I don\'t found your email and password in our database.');

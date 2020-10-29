@@ -2,23 +2,24 @@
 namespace App\Http\Controllers;
 
 use Exception;
+use App\User;
 use App\Repositories\UserRepository;
 use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
-    protected $userRepository;
+    private $userRepository;
 
-    public function __construct(UserRepository $userRepo)
+    public function __construct(UserRepository $userRepository)
     {
-        $this->userRepository = userRepo;
+        $this->userRepository = $userRepository
     }
 
 
-    public function register($parameters)
+    public function register()
     {
-        $decrypted_password = $parameters['password'];
-        $parameters['password'] = bcrypt($parameters['password']);
+        //$decrypted_password = $parameters['password'];
+        //$parameters['password'] = bcrypt($parameters['password']);
         /*
                 $userExists = $this->userRepository->findByEmail($parameters["email"]);
 
@@ -41,26 +42,5 @@ class UserController extends Controller
         return "hola";
     }
 
-    /**
-     * login - Method to realize the Login
-     *
-     * @param string $email Email from the user
-     * @param string $password Password from the user
-     *
-     * @return mixed
-     */
-    public function login(string $email, string $password)
-    {
-        $credentials = ["email" => $email, "password" => $password];
-        if (!$token = auth()->attempt($credentials)) {
-            return false;
-        }
 
-        $data_return = [
-            'name' => Auth::user()->name,
-            'token' => $token
-        ];
-
-        return $data_return;
-    }
 }
